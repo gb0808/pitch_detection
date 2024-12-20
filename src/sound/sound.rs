@@ -1,10 +1,21 @@
 use super::LittleEndian;
 use std::{fmt, fs};
 
+fn stero_to_mono(data: &[u8]) -> Vec<u8> {
+    let mut avg = Vec::new();
+    let mut temp = 0;
+    for i in 0..data.len() {
+        if i % 2 == 0 {
+            temp = data[i];
+        } else {
+            avg.push(temp / 2 + data[i] / 2);
+        }
+    }
+    avg
+}
+
 pub struct Sound {
     sample_rate: u32,
-    bits_per_sample: u16,
-    number_of_channels: u16,
     data: Vec<u8>,
 }
 
@@ -34,23 +45,20 @@ impl Sound {
 
         Self {
             sample_rate: LittleEndian::read_u32(_samplerate),
-            bits_per_sample: LittleEndian::read_u16(_bitspersample),
-            number_of_channels: LittleEndian::read_u16(_numchannels),
-            data: _data.to_vec(),
+            data: if LittleEndian::read_u16(_numchannels) == 2 {
+                stero_to_mono(_data)
+            } else if LittleEndian::read_u16(_numchannels) == 1 {
+                _data.to_vec()
+            } else {
+                Vec::new()
+            },
         }
     }
 }
 
 impl fmt::Display for Sound {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f, 
-            "Sample Rate: {}\nBits per Sample: {}\nChannels: {}\nData Length: {} bytes\n",
-            self.sample_rate, 
-            self.bits_per_sample,
-            self.number_of_channels,
-            self.data.len()
-        )
+        write!(f, "Sample Rate: {}\nData Length: {} bytes\n", self.sample_rate, self.data.len())
     }
 }
 
