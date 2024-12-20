@@ -15,8 +15,8 @@ fn stero_to_mono(data: &[u8]) -> Vec<u8> {
 }
 
 pub struct Sound {
-    sample_rate: u32,
-    data: Vec<u8>,
+    pub sample_rate: u32,
+    pub data: Vec<u8>,
 }
 
 impl Sound {
