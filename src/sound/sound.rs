@@ -1,5 +1,5 @@
 use super::LittleEndian;
-use std::{fmt, fs};
+use std::{cell::RefCell, fmt, fs};
 
 fn stero_to_mono(data: &[u8]) -> Vec<u8> {
     let mut avg = Vec::new();
@@ -16,7 +16,7 @@ fn stero_to_mono(data: &[u8]) -> Vec<u8> {
 
 pub struct Sound {
     pub sample_rate: u32,
-    pub data: Vec<u8>,
+    pub data: RefCell<Vec<u8>>,
 }
 
 impl Sound {
@@ -46,11 +46,11 @@ impl Sound {
         Self {
             sample_rate: LittleEndian::read_u32(_samplerate),
             data: if LittleEndian::read_u16(_numchannels) == 2 {
-                stero_to_mono(_data)
+                RefCell::new(stero_to_mono(_data))
             } else if LittleEndian::read_u16(_numchannels) == 1 {
-                _data.to_vec()
+                RefCell::new(_data.to_vec())
             } else {
-                Vec::new()
+                RefCell::new(Vec::new())
             },
         }
     }
@@ -58,7 +58,12 @@ impl Sound {
 
 impl fmt::Display for Sound {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Sample Rate: {}\nData Length: {} bytes\n", self.sample_rate, self.data.len())
+        write!(
+            f, 
+            "Sample Rate: {}\nData Length: {} bytes\n", 
+            self.sample_rate, 
+            self.data.borrow().len()
+        )
     }
 }
 
