@@ -25,12 +25,37 @@ impl ComplexNumber {
         }
     }
 
-    pub fn get_magnitude(self) -> f32 {
+    pub fn default() -> Self {
+        Self::new(0.0, 0.0)
+    }
+
+    pub fn get_magnitude(&self) -> f32 {
         ((self.r * self.r) + (self.i * self.i)).sqrt()
     }
 
-    pub fn get_phase(self) -> f32 {
+    pub fn get_phase(&self) -> f32 {
         (self.i / self.r).atan()
+    }
+
+    pub fn add(&self, other: &Self) -> ComplexNumber {
+        Self {
+            r: self.r + other.r,
+            i: self.i + other.i,
+        }
+    }
+
+    pub fn sub(&self, other: &Self) -> ComplexNumber {
+        Self {
+            r: self.r - other.r,
+            i: self.i - other.i,
+        }
+    }
+
+    pub fn mul(&self, other: &Self) -> ComplexNumber {
+        Self {
+            r: self.r * other.r - self.i * other.i,
+            i: self.r * other.i + self.i * other.r,
+        }
     }
 }
 
