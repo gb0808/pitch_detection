@@ -31,7 +31,6 @@ fn reverse_bits(x: usize, bit_length: usize) -> usize {
 mod tests {
     #![allow(unused)]
     use super::*;
-    use std::cell::RefCell;
 
     #[test]
     fn reverse_bits_test() {
