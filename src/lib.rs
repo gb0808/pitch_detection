@@ -1,11 +1,21 @@
-pub mod math;
 pub mod sound;
 
 use sound::Sound;
-use math::{transform, complex};
+use rustfft::{FftPlanner, num_complex::Complex};
 
-fn harmonic_product_spectrum(data: &[complex::ComplexNumber], sample_rate: u32) -> f32 {
-    const R: u8 = 2;
+fn run_transform(data: &[u8]) -> Vec<Complex<f32>> {
+    let mut planner = FftPlanner::new();
+    let fft = planner.plan_fft_forward(data.len());
+    let mut buffer = Vec::new();
+    for sample in data {
+        buffer.push(Complex::new(*sample as f32, 0.0));
+    }
+    fft.process(&mut buffer);
+    buffer
+}
+
+fn harmonic_product_spectrum(data: &[Complex<f32>], sample_rate: u32) -> f32 {
+    const R: u8 = 1;
     let low = (20.0 * data.len() as f32 / sample_rate as f32) as usize;
     let high = (20000.0 * data.len() as f32 / sample_rate as f32) as usize;
     let (mut max_frequency, mut max_product) = (0.0, 0.0);
@@ -14,7 +24,7 @@ fn harmonic_product_spectrum(data: &[complex::ComplexNumber], sample_rate: u32) 
         let freq = i as f32 / data.len() as f32 * sample_rate as f32;
         for r in 1..=R {
             let index = (freq * r as f32 * data.len() as f32 / sample_rate as f32) as usize;
-            product *= data[index].get_magnitude();
+            product *= data[index].norm();
         }
         if product > max_product {
             max_product = product;
@@ -25,10 +35,10 @@ fn harmonic_product_spectrum(data: &[complex::ComplexNumber], sample_rate: u32) 
 }
 
 fn detect_pitch(sound: Sound) -> f32 {
-    let data = transform::fast_fourier_transform(&sound.data);
+    let data = run_transform(&sound.data);
     let mut norms = Vec::new();
     for slice in &data {
-        norms.push(slice.get_magnitude());
+        norms.push(slice.norm());
     }
     harmonic_product_spectrum(&data, sound.sample_rate)
 }
@@ -39,7 +49,7 @@ mod tests {
 
     macro_rules! approx {
         ($x:expr, $y:expr) => {
-            if !($x - $y < 0.0005 || $y - $x < 0.0005) {
+            if !($x - $y < 0.05 && $y - $x < 0.05) {
                 panic!();
             }
         };

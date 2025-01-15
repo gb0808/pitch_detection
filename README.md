@@ -4,6 +4,10 @@ This is a rust crate that identifies pitches in a piece of music
 Under heavy development - Updates forthcoming
 
 ## Updates
+### v 1.0.2
+* rustfft is being used for the fft
+* got rid of math module
+
 ### v 1.0.1
 * fft is now done in-place
 
