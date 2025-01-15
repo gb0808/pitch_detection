@@ -2,20 +2,9 @@ pub mod math;
 pub mod sound;
 
 use sound::Sound;
-use rustfft::{FftPlanner, num_complex::Complex};
+use math::{transform, complex};
 
-fn run_transform(data: &[u8]) -> Vec<Complex<f32>> {
-    let mut planner = FftPlanner::new();
-    let fft = planner.plan_fft_forward(data.len());
-    let mut buffer = Vec::new();
-    for sample in data {
-        buffer.push(Complex::new(*sample as f32, 0.0));
-    }
-    fft.process(&mut buffer);
-    buffer
-}
-
-fn harmonic_product_spectrum(data: &[Complex<f32>], sample_rate: u32) -> f32 {
+fn harmonic_product_spectrum(data: &[complex::ComplexNumber], sample_rate: u32) -> f32 {
     const R: u8 = 2;
     let low = (20.0 * data.len() as f32 / sample_rate as f32) as usize;
     let high = (20000.0 * data.len() as f32 / sample_rate as f32) as usize;
@@ -25,7 +14,7 @@ fn harmonic_product_spectrum(data: &[Complex<f32>], sample_rate: u32) -> f32 {
         let freq = i as f32 / data.len() as f32 * sample_rate as f32;
         for r in 1..=R {
             let index = (freq * r as f32 * data.len() as f32 / sample_rate as f32) as usize;
-            product *= data[index].norm();
+            product *= data[index].get_magnitude();
         }
         if product > max_product {
             max_product = product;
@@ -36,10 +25,10 @@ fn harmonic_product_spectrum(data: &[Complex<f32>], sample_rate: u32) -> f32 {
 }
 
 fn detect_pitch(sound: Sound) -> f32 {
-    let data = run_transform(&sound.data);
+    let data = transform::fast_fourier_transform(&sound.data);
     let mut norms = Vec::new();
     for slice in &data {
-        norms.push(slice.norm());
+        norms.push(slice.get_magnitude());
     }
     harmonic_product_spectrum(&data, sound.sample_rate)
 }
