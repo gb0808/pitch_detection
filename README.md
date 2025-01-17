@@ -4,6 +4,11 @@ This is a rust crate that identifies pitches in a piece of music
 Under heavy development - Updates forthcoming
 
 ## Updates
+### v 1.0.3
+* the pitch detection algorithm now breaks the signal up into chucks and returns the 
+frequencies of those chuncks
+* signal processing code has been moved to its own module
+
 ### v 1.0.2
 * rustfft is being used for the fft
 * got rid of math module
