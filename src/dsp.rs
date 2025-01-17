@@ -26,20 +26,19 @@ fn run_transform(data: &[u8]) -> Vec<Complex<f32>> {
 }
 
 fn harmonic_product_spectrum(data: &[Complex<f32>], sample_rate: u32) -> f32 {
-    const R: u8 = 1;
-    let low = (20.0 * data.len() as f32 / sample_rate as f32) as usize;
-    let high = (20000.0 * data.len() as f32 / sample_rate as f32) as usize;
+    const R: u8 = 5;
+    let sample_rate = sample_rate as f32;
+    let n = data.len() as f32;
+    let low = (25.0 * data.len() as f32 / sample_rate as f32) as usize;
+    let high = (7500.0 * data.len() as f32 / sample_rate as f32) as usize;
     let (mut max_frequency, mut max_product) = (0.0, 0.0);
     for i in low..high {
-        let mut product = 1.0;
         let freq = i as f32 / data.len() as f32 * sample_rate as f32;
-        for r in 1..=R {
-            let index = (freq * r as f32 * data.len() as f32 / sample_rate as f32) as usize;
-            product *= data[index].norm();
-        }
+        let product = (1..=R).into_iter()
+                             .map(|r| data[(freq * r as f32 *  n / sample_rate) as usize].norm())
+                             .product();
         if product > max_product {
-            max_product = product;
-            max_frequency = freq;
+            (max_frequency, max_product) = (freq, product);
         }
     }
     max_frequency * 2.0
