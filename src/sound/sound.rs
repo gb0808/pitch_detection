@@ -22,32 +22,15 @@ pub struct Sound {
 impl Sound {
     pub fn from_wav(path: &str) -> Self {
         let contents = fs::read(path).expect("error: could not read file");
+        let numchannels = &contents[22..24];
+        let samplerate = &contents[24..28];
+        let _data = &contents[44..];
     
-        // The "RIFF" chunk descriptor
-        let _riff = &contents[0..4];                // big endian
-        let _chunksize = &contents[4..8];           // little endian
-        let _format = &contents[8..12];             // big endian
-
-        // The "fmt" sub-chunk
-        let _subchunk1id = &contents[12..16];        // bid endian
-        let _subchunk1size = &contents[16..20];     // little endian
-        let _audioformat = &contents[20..22];       // little endian
-        let _numchannels = &contents[22..24];       // little endian
-        let _samplerate = &contents[24..28];        // little endian
-        let _byterate = &contents[28..32];          // little endian
-        let _blockalign = &contents[32..34];        // little endian
-        let _bitspersample = &contents[34..36];     // little endian
-
-        // The "data" sub-chunk
-        let _subchunk2id = &contents[36..40];       // big endian
-        let _subchunk2size = &contents[40..44];     // little endian
-        let _data = &contents[44..];                // little endian
-
         Self {
-            sample_rate: LittleEndian::read_u32(_samplerate),
-            data: if LittleEndian::read_u16(_numchannels) == 2 {
+            sample_rate: LittleEndian::read_u32(samplerate),
+            data: if LittleEndian::read_u16(numchannels) == 2 {
                 stero_to_mono(_data)
-            } else if LittleEndian::read_u16(_numchannels) == 1 {
+            } else if LittleEndian::read_u16(numchannels) == 1 {
                 _data.to_vec()
             } else {
                 Vec::new()
