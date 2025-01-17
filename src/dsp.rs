@@ -46,10 +46,11 @@ fn harmonic_product_spectrum(data: &[Complex<f32>], sample_rate: u32) -> f32 {
 }
 
 pub fn detect_pitch(signal: &[u8], sample_rate: u32) -> Vec<f32> {
-    let raw_frames = divide_signal(signal, 88200);
+    let frame_size = (sample_rate / 10) as usize;
+    let raw_frames = divide_signal(signal, frame_size);
     println!("Signal Length: {}", raw_frames[1].len());
-    let frames: Vec<Vec<Complex<f32>>> = raw_frames.into_iter().map(|raw_frame| {
-        raw_frame.into_iter().map(|sample| Complex::new(sample as f32, 0.0)).collect()
-    }).collect();
+    let frames: Vec<Vec<Complex<f32>>> = raw_frames.into_iter()
+                                                   .map(|rf| run_transform(&rf))
+                                                   .collect();
     frames.into_iter().map(|frame| harmonic_product_spectrum(&frame, sample_rate)).collect()
 }
